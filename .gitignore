@@ -1,0 +1,16 @@
+# ambiente
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# segredos
+.env
+
+# corpus e saída gerada — nada disso entra no git
+data/raw/*
+!data/raw/.gitkeep
+outputs/*
+!outputs/.gitkeep
+logs/
