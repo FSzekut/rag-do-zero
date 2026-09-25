@@ -1,0 +1,21 @@
+# Regras fixadas de propósito.
+#
+# Sem este arquivo, vale o conjunto padrão da versão do ruff instalada — e esse
+# padrão muda entre versões. O resultado seria o pior tipo de erro de CI: passa
+# no meu computador e reprova no GitHub, ou o contrário, sem ninguém ter mexido
+# no código. Aqui as regras são as mesmas em todo lugar.
+
+line-length = 88
+target-version = "py312"
+
+[lint]
+select = [
+  "E",    # erros de estilo do pycodestyle
+  "F",    # erros reais do pyflakes: variável não usada, import morto
+  "W",    # avisos do pycodestyle
+  "I",    # ordem dos imports
+  "UP",   # sintaxe antiga que a versão do Python já permite escrever melhor
+  "B",    # armadilhas comuns (bugbear)
+  "SIM",  # trechos que dá para simplificar
+  "RUF",  # regras do próprio ruff
+]

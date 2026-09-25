@@ -118,6 +118,7 @@ rag-do-zero/
 ├── requirements.txt              # o que o Space instala para rodar
 ├── requirements-dev.txt          # o que eu instalo para testar (pytest, ruff)
 ├── pytest.ini                    # diz ao pytest onde procurar o código
+├── ruff.toml                     # as regras de lint, fixadas para local e CI baterem
 ├── .env.example                  # os nomes das três chaves, sem valor nenhum
 ├── README.md                     # com o cabeçalho YAML do Space
 ├── SPEC-parte1-cicd-deploy.md    # este documento
@@ -459,6 +460,7 @@ seção 7 precisa estar pronta antes da tarefa 7.
 | 24/09/2026 | YAML em vez de JSON | aceita comentário e perdoa mais na edição pelo navegador |
 | 24/09/2026 | Resposta de uma vez, sem fluxo palavra a palavra | torna "falhou antes de responder" uma regra simples e testável |
 | 24/09/2026 | Actions dando push no Space, em vez da sincronização automática do HF | é o push que permite barrar a publicação quando a configuração está errada |
+| 24/09/2026 | Regras do `ruff` fixadas em `ruff.toml` e versão presa em `>=0.16,<0.17` | o conjunto padrão de regras muda entre versões do ruff; sem fixar, o CI reprova o que passou aqui sem ninguém ter mexido no código |
 | 24/09/2026 | Python 3.12, não 3.11 | é o que o Space já declarou no `README.md`; igualar evita o clássico "funciona aqui e falha lá" |
 | 24/09/2026 | `requirements.txt` só com o que roda, e `requirements-dev.txt` com pytest e ruff | o Space não precisa instalar ferramenta de teste; build mais leve e rápido |
 | 24/09/2026 | Limite de mensagens por sessão | link público com as minhas chaves; o gratuito em primeiro lugar e o limite cobrem o uso normal |
