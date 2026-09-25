@@ -447,6 +447,7 @@ seção 7 precisa estar pronta antes da tarefa 7.
 | O deploy passa mas o Space **não muda** | o push foi para o GitHub e não para o Space, ou o Space está dormindo | conferir o log do `deploy.yml`; abrir o Space e esperar alguns segundos |
 | A logo não aparece | caminho errado, ou arquivo não commitado | o caminho é relativo à raiz, ex.: `assets/logo.png` |
 | O build do Space demora demais ou estoura memória | dependência pesada entrando sem necessidade | na parte 1 nada de IA local entra no `requirements.txt`: só `gradio`, `pyyaml`, `anthropic`, `openai` |
+| A OpenAI recusa a chamada com *Unsupported parameter: max_tokens* | os modelos novos da OpenAI pedem `max_completion_tokens`; o OpenRouter espera `max_tokens` | já tratado: o cliente usa o parâmetro certo para cada um. Se aparecer, é sinal de que a API mudou de novo |
 | O CI passa no meu computador e falha no GitHub | versão diferente de Python, ou arquivo não commitado | o CI usa Python 3.12; conferir `git status` antes de concluir que "funciona aqui" |
 
 ---
