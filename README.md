@@ -1,56 +1,67 @@
-# rag_do_zero
+---
+title: Professor Eng Dados
+emoji: 🌖
+colorFrom: green
+colorTo: blue
+sdk: gradio
+sdk_version: 6.28.0
+python_version: '3.12'
+app_file: app.py
+pinned: false
+---
 
-RAG construído peça por peça — pós **Engenharia de Dados e IA** (Anhanguera).
+# Professor de Engenharia de Dados
 
-O RAGnaldo já responde perguntas em produção. Este projeto existe para saber o que
-acontece **dentro** dele: carga, chunking, embedding, busca vetorial e prompt, cada
-etapa num módulo separado, escrita à mão.
+Assistente de IA que tira dúvidas de engenharia de dados e inteligência artificial,
+explicando como professor. Publicado em
+[huggingface.co/spaces/FSzekut/professor-eng-dados](https://huggingface.co/spaces/FSzekut/professor-eng-dados).
 
-- O combinado está em [`docs/spec.md`](docs/spec.md) — ler antes de codar.
-- A ordem do trabalho está em [`docs/tasks.md`](docs/tasks.md).
+> **O bloco entre `---` no topo deste arquivo não é enfeite.** É ele que diz ao Hugging
+> Face qual SDK usar, qual versão e qual arquivo executar. Apagar essas linhas quebra a
+> publicação.
 
-## Estrutura
+## O que é este repositório
 
-```text
-src/rag/
-  config.py     caminhos e parâmetros    (pronto)
-  ingest.py     carga + chunking         T1, T2
-  index.py      embedding + Chroma       T3
-  retrieve.py   busca vetorial           T4
-  answer.py     prompt + Claude          T5
-  cli.py        ingest / ask             (pronto)
-tests/          teste de chunking, vermelho de propósito
-data/raw/       o corpus — fora do git
-outputs/chroma/ o índice — gerado, descartável, fora do git
-```
+Projeto da pós **Engenharia de Dados e IA** (Anhanguera), construído em partes:
 
-## Ambiente
+| Parte | O que entrega | Situação |
+|---|---|---|
+| 1 | Chat publicado + esteira automática de CI/CD | em construção |
+| 2 | Base de conhecimento com documentos próprios (RAG) | a fazer |
+| 3 | Site próprio, com domínio e visual feito do zero | a fazer |
+
+O combinado da parte 1 está em [`SPEC-parte1-cicd-deploy.md`](SPEC-parte1-cicd-deploy.md);
+a ideia original, em linguagem simples, em [`ideia_1.md`](ideia_1.md).
+
+## Como personalizar o assistente
+
+Editando **um arquivo só**, o `config.yaml`, direto pelo site do GitHub: nome, descrição,
+cores, logo, instruções de comportamento, perguntas de exemplo, limites e quais modelos
+usar, em ordem de preferência. Ao salvar, a esteira confere a alteração e o site se
+atualiza sozinho. Se a configuração estiver errada, a publicação é barrada e a versão
+anterior continua no ar.
+
+## Chaves de API
+
+O assistente funciona com **qualquer uma** destas três, sozinha ou combinadas:
+
+| Provedor | Variável | Observação |
+|---|---|---|
+| OpenRouter | `OPENROUTER_API_KEY` | dá acesso a modelos gratuitos; é o primeiro da fila |
+| Anthropic | `ANTHROPIC_API_KEY` | |
+| OpenAI | `OPENAI_API_KEY` | |
+
+As chaves ficam **só nos Secrets do Space**, nunca no código. Se um provedor falhar antes
+de responder, o app tenta o próximo sozinho.
+
+## Rodando no meu computador
 
 ```bash
-cd ~/projects/Eng_dados_ia/rag_do_zero
 uv venv
 source .venv/bin/activate
-uv pip install torch --index-url https://download.pytorch.org/whl/cpu
-uv pip install -r requirements.txt
-cp .env.example .env    # e preencher ANTHROPIC_API_KEY
-```
-
-O torch CPU-only vem antes de propósito: instalado pelo caminho normal, o
-`sentence-transformers` puxa alguns GB de CUDA que não servem para nada aqui.
-
-## Uso
-
-```bash
-# coloque uns PDFs em data/raw/ primeiro
-python -m rag.cli ingest
-python -m rag.cli ask "sua pergunta"
+uv pip install -r requirements-dev.txt
 pytest
 ```
 
-## Diário de bordo
-
-Anotar aqui, por etapa, o que surpreendeu — não o que deu certo.
-
-| Etapa | O que aprendi |
-|---|---|
-| | |
+Os testes rodam **sem chave de API e sem internet** — de propósito, para o portão do CI
+ser rápido e nunca precisar de segredo.

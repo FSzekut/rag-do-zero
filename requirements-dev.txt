@@ -1,0 +1,4 @@
+# Só para testar e revisar o código, no meu computador e no CI.
+-r requirements.txt
+pytest>=9.0,<10
+ruff>=0.8,<1
