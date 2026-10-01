@@ -278,3 +278,33 @@ def test_instrucao_junta_papel_publico_e_proibicoes(config):
     assert "pós-graduação" in texto
     assert "Não invente números" in texto
     assert "português" in texto.lower()
+
+
+def test_motivo_traz_um_trecho_da_resposta_do_provedor(config):
+    """Um 429 sozinho não diz o porquê: o trecho do provedor ajuda a descobrir."""
+    ambiente = {"OPENROUTER_API_KEY": CHAVE_FALSA}
+    clientes = {
+        "openrouter": ClienteDeMentira(
+            erro=ErroDeAPI(429, "free-models-per-day: limite diario da conta")
+        )
+    }
+    resultado = responder(
+        config, [{"role": "user", "content": "oi"}],
+        ambiente=ambiente, fabrica=fabrica_de(clientes),
+    )
+    motivo = resultado.tentativas[0].motivo
+    assert "(429)" in motivo
+    assert "free-models-per-day" in motivo
+
+
+def test_trecho_do_provedor_e_limitado_e_nao_vaza_chave(config):
+    ambiente = {"OPENROUTER_API_KEY": CHAVE_FALSA}
+    longo = f"erro com a chave {CHAVE_FALSA} " + "x" * 500
+    clientes = {"openrouter": ClienteDeMentira(erro=ErroDeAPI(429, longo))}
+    resultado = responder(
+        config, [{"role": "user", "content": "oi"}],
+        ambiente=ambiente, fabrica=fabrica_de(clientes),
+    )
+    motivo = resultado.tentativas[0].motivo
+    assert CHAVE_FALSA not in motivo
+    assert len(motivo) < 320

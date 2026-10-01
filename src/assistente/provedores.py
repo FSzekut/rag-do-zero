@@ -185,6 +185,22 @@ def _sem_segredo(texto: str, chaves: Sequence[str]) -> str:
     return FORMATO_DE_CHAVE.sub("***", limpo)
 
 
+TAMANHO_MAXIMO_DO_DETALHE = 160
+
+
+def _detalhe(erro: Exception) -> str:
+    """Um trecho curto da mensagem do próprio provedor, para saber o porquê.
+
+    Um "429" sozinho não diz se foi o limite diário da conta, o modelo lotado ou
+    o provedor de origem. A chave nunca vaza por aqui: `responder` passa o texto
+    final por `_sem_segredo`.
+    """
+    texto = " ".join(str(erro).split())
+    if len(texto) > TAMANHO_MAXIMO_DO_DETALHE:
+        texto = texto[:TAMANHO_MAXIMO_DO_DETALHE].rstrip() + "…"
+    return f" — resposta do provedor: {texto}" if texto else ""
+
+
 def _motivo_legivel(erro: Exception) -> str:
     """Traduz a falha para uma frase que o usuário do chat entende."""
     if isinstance(erro, FalhaDoProvedor):
@@ -192,15 +208,17 @@ def _motivo_legivel(erro: Exception) -> str:
 
     status = getattr(erro, "status_code", None)
     if status in (401, 403):
-        return f"chave inválida ou sem permissão ({status})"
+        return f"chave inválida ou sem permissão ({status}){_detalhe(erro)}"
     if status == 402:
-        return "sem crédito no provedor (402)"
+        return f"sem crédito no provedor (402){_detalhe(erro)}"
     if status == 404:
-        return "modelo não encontrado neste provedor (404)"
+        return f"modelo não encontrado neste provedor (404){_detalhe(erro)}"
     if status == 429:
-        return "limite atingido ou modelo gratuito lotado (429)"
+        return (
+            "limite atingido ou modelo gratuito lotado (429)" + _detalhe(erro)
+        )
     if isinstance(status, int) and status >= 500:
-        return f"provedor fora do ar ({status})"
+        return f"provedor fora do ar ({status}){_detalhe(erro)}"
 
     nome = type(erro).__name__.lower()
     if "timeout" in nome:
