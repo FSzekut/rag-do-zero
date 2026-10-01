@@ -18,7 +18,7 @@ from assistente.provedores import (
 )
 
 RAIZ = Path(__file__).resolve().parent.parent
-CHAVE_FALSA = "sk-or-v1-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+CHAVE_FALSA = "sk-or-v1-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"  # segredo-falso
 
 
 @pytest.fixture
@@ -257,7 +257,7 @@ def test_t12_a_chave_nao_aparece_quando_o_erro_a_repete(config):
 
 
 def test_t12_chave_de_outro_formato_tambem_e_escondida(config):
-    vazada = "sk-ant-api03-ABCDEFGHIJKLMNOP1234567890"
+    vazada = "sk-ant-api03-ABCDEFGHIJKLMNOP1234567890"  # segredo-falso
     clientes = {
         "anthropic": ClienteDeMentira(erro=Exception(f"erro com {vazada} no texto"))
     }
