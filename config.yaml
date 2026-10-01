@@ -12,7 +12,7 @@ assistente:
   logo_altura_px: 64       # de 16 a 200
 
 aparencia:
-  cor_primaria: "azul"  # cor hexadecimal, sempre com # na frente
+  cor_primaria: "#1f6feb"  # cor hexadecimal, sempre com # na frente
   cor_secundaria: "#0d1117"
   tema: escuro             # claro ou escuro
 
