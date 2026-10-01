@@ -41,7 +41,7 @@ limites:
 # Provedor sem chave cadastrada nos Secrets do Space é ignorado.
 provedores:
   - nome: openrouter
-    modelo: "google/gemma-4-31b-it:free"
+    modelo: "google/gemma-4-26b-a4b-it:free"
   - nome: anthropic
     modelo: "claude-opus-5"
   - nome: openai
