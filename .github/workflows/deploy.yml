@@ -1,0 +1,52 @@
+# A publicação. Só roda depois que o CI terminou VERDE na main.
+#
+# Publicar = dar `git push` para o repositório do Space. O Space percebe o push,
+# reconstrói e sobe a versão nova em 1 a 3 minutos. Se o CI ficar vermelho, este
+# arquivo nem começa: nada vai para o ar e o Space continua com a versão antiga.
+#
+# O HF_TOKEN (fine-grained, com escrita neste Space) mora nos secrets do GitHub.
+# Ele nunca vai para o Space, e o ci.yml nunca o enxerga.
+
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Duas publicações ao mesmo tempo disputariam o mesmo push.
+concurrency:
+  group: deploy-space
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    # `event == 'push'` é a trava de segurança: o filtro `branches: [main]` também
+    # casaria com um pull request vindo de um fork que se chame "main", e esse
+    # código de fora rodaria com acesso ao secret.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Exatamente o commit que o CI aprovou, não o que estiver na ponta depois.
+          ref: ${{ github.event.workflow_run.head_sha }}
+          # Histórico completo: com histórico raso o Space rejeita o push.
+          fetch-depth: 0
+
+      - name: Publicar no Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # --force porque o Space nasceu com um commit próprio (o README inicial)
+          # e o histórico do GitHub não descende dele. O GitHub é a fonte da
+          # verdade; o Space é só uma cópia para rodar.
+          git push --force \
+            "https://FSzekut:${HF_TOKEN}@huggingface.co/spaces/FSzekut/professor-eng-dados" \
+            HEAD:main
