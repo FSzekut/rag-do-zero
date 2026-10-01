@@ -46,3 +46,14 @@ provedores:
     modelo: "claude-opus-5"
   - nome: openai
     modelo: "gpt-6-sol"
+
+# A base de consulta (parte 2): o assistente responde com base nos documentos da
+# pasta documentos/. É opcional: sem este bloco inteiro, ele responde como na parte 1.
+# Mudou o tamanho ou a sobreposição dos trechos? O próximo push reindexa tudo.
+base_conhecimento:
+  trechos_por_resposta: 4      # quantos trechos vão ao modelo, de 1 a 10
+  tamanho_trecho: 150          # máximo de palavras por trecho, de 40 a 400
+  sobreposicao_trecho: 15      # % repetido entre trechos vizinhos, de 0 a 30
+  peso_palavras: 1.0           # peso da busca por palavras, de 0 a 5 (0 desliga)
+  peso_sentido: 1.0            # peso da busca por sentido, de 0 a 5 (0 desliga)
+  similaridade_minima: 0.30    # abaixo disto, trecho achado só por sentido é descartado

@@ -75,6 +75,18 @@ class Provedor:
 
 
 @dataclass(frozen=True)
+class BaseConhecimento:
+    """Ajustes da base de consulta (parte 2). Os padrões valem para campo omitido."""
+
+    trechos_por_resposta: int = 4
+    tamanho_trecho: int = 150  # em palavras
+    sobreposicao_trecho: int = 15  # em %
+    peso_palavras: float = 1.0
+    peso_sentido: float = 1.0
+    similaridade_minima: float = 0.30
+
+
+@dataclass(frozen=True)
 class Config:
     assistente: Assistente
     aparencia: Aparencia
@@ -82,6 +94,8 @@ class Config:
     limites: Limites
     provedores: list[Provedor]
     perguntas_exemplo: list[str] = field(default_factory=list)
+    # None = bloco ausente = o app se comporta como na parte 1 (RF33)
+    base_conhecimento: BaseConhecimento | None = None
 
 
 class _Coletor:
@@ -147,6 +161,20 @@ class _Coletor:
         if not minimo <= valor <= maximo:
             self.erro(caminho, f"fora da faixa aceita, de {minimo} a {maximo}")
         return valor
+
+    def numero(self, dados: dict[str, Any], campo: str, chave: str, *,
+               minimo: float, maximo: float, padrao: float) -> float:
+        """Número com vírgula ou inteiro (1 e 1.0 valem o mesmo), dentro da faixa."""
+        valor = dados.get(chave)
+        caminho = f"{campo}.{chave}"
+        if valor is None:
+            return padrao
+        if isinstance(valor, bool) or not isinstance(valor, int | float):
+            self.erro(caminho, "deveria ser um número, sem aspas")
+            return padrao
+        if not minimo <= valor <= maximo:
+            self.erro(caminho, f"fora da faixa aceita, de {minimo:g} a {maximo:g}")
+        return float(valor)
 
     def cor(self, dados: dict[str, Any], campo: str, chave: str, *,
             obrigatorio: bool) -> str:
@@ -247,6 +275,53 @@ def _validar_provedores(c: _Coletor, dados: Any) -> list[Provedor]:
     return provedores
 
 
+CAMPOS_DA_BASE = (
+    "trechos_por_resposta", "tamanho_trecho", "sobreposicao_trecho",
+    "peso_palavras", "peso_sentido", "similaridade_minima",
+)
+
+
+def _validar_base_conhecimento(c: _Coletor, dados: Any) -> BaseConhecimento:
+    """Valida o bloco opcional. O chamador só entra aqui se o bloco existe."""
+    campo = "base_conhecimento"
+    bloco = c.bloco(dados, campo, obrigatorio=False)
+    c.sem_campos_extras(bloco, campo, CAMPOS_DA_BASE)
+    padrao = BaseConhecimento()
+    base = BaseConhecimento(
+        trechos_por_resposta=c.inteiro(
+            bloco, campo, "trechos_por_resposta",
+            minimo=1, maximo=10, padrao=padrao.trechos_por_resposta,
+        ),
+        tamanho_trecho=c.inteiro(
+            bloco, campo, "tamanho_trecho",
+            minimo=40, maximo=400, padrao=padrao.tamanho_trecho,
+        ),
+        sobreposicao_trecho=c.inteiro(
+            bloco, campo, "sobreposicao_trecho",
+            minimo=0, maximo=30, padrao=padrao.sobreposicao_trecho,
+        ),
+        peso_palavras=c.numero(
+            bloco, campo, "peso_palavras", minimo=0, maximo=5,
+            padrao=padrao.peso_palavras,
+        ),
+        peso_sentido=c.numero(
+            bloco, campo, "peso_sentido", minimo=0, maximo=5,
+            padrao=padrao.peso_sentido,
+        ),
+        similaridade_minima=c.numero(
+            bloco, campo, "similaridade_minima", minimo=0, maximo=1,
+            padrao=padrao.similaridade_minima,
+        ),
+    )
+    if base.peso_palavras == 0 and base.peso_sentido == 0:
+        c.erro(
+            f"{campo}.peso_palavras",
+            "os dois pesos estão em zero, e a busca ficaria sem nenhuma perna — "
+            "deixe ao menos um deles maior que zero",
+        )
+    return base
+
+
 def interpretar(dados: Any, raiz: Path) -> Config:
     """Valida um dicionário já lido do YAML e devolve a configuração pronta.
 
@@ -260,7 +335,7 @@ def interpretar(dados: Any, raiz: Path) -> Config:
         dados,
         "raiz",
         ("assistente", "aparencia", "comportamento", "perguntas_exemplo",
-         "limites", "provedores"),
+         "limites", "provedores", "base_conhecimento"),
     )
 
     b_assistente = c.bloco(dados.get("assistente"), "assistente", obrigatorio=True)
@@ -338,6 +413,12 @@ def interpretar(dados: Any, raiz: Path) -> Config:
         dados, "", "perguntas_exemplo", maximo_de_itens=6, maximo_por_item=120
     )
     provedores = _validar_provedores(c, dados.get("provedores"))
+    # Presente (mesmo vazio) liga a base com os padrões; ausente deixa como na parte 1.
+    base = (
+        _validar_base_conhecimento(c, dados["base_conhecimento"])
+        if "base_conhecimento" in dados
+        else None
+    )
 
     if c.erros:
         raise ErroDeConfiguracao(c.erros)
@@ -349,6 +430,7 @@ def interpretar(dados: Any, raiz: Path) -> Config:
         limites=limites,
         provedores=provedores,
         perguntas_exemplo=perguntas,
+        base_conhecimento=base,
     )
 
 

@@ -24,6 +24,17 @@ sys.path.insert(0, str(RAIZ / "src"))
 from assistente.config import Config, ErroDeConfiguracao, carregar  # noqa: E402
 
 
+def _resumo_da_base(config: Config) -> str:
+    base = config.base_conhecimento
+    if base is None:
+        return "desligada (o assistente responde como na parte 1)"
+    return (
+        f"{base.trechos_por_resposta} trechos por resposta, de até "
+        f"{base.tamanho_trecho} palavras; pesos {base.peso_palavras:g} (palavras) "
+        f"e {base.peso_sentido:g} (sentido)"
+    )
+
+
 def _resumo(config: Config) -> str:
     """Mostra o que vai valer, para conferir de olho antes de publicar."""
     linhas = [
@@ -37,6 +48,7 @@ def _resumo(config: Config) -> str:
         f"  perguntas       {len(config.perguntas_exemplo)} botão(ões) de exemplo",
         f"  resposta até    {config.limites.tamanho_maximo_resposta} tokens",
         f"  por sessão      {config.limites.mensagens_por_sessao} mensagens",
+        f"  base            {_resumo_da_base(config)}",
         "  provedores, na ordem de preferência:",
     ]
     for i, p in enumerate(config.provedores, start=1):
