@@ -3,7 +3,8 @@
 > Documento escrito **antes** do código. Se algo aqui estiver errado, corrija **este
 > arquivo** primeiro e só depois a implementação.
 >
-> Origem: [`ideia_1.md`](ideia_1.md) · Data: 24/09/2026 · Status: aguardando aprovação
+> Origem: [`ideia_1.md`](ideia_1.md) · Data: 24/09/2026 · Status: **implementada e no ar
+> em 01/10/2026** (tarefas 1 a 8; veja a seção 8 e o Registro de decisões)
 
 ---
 
@@ -67,13 +68,13 @@ Pagamento, painel administrativo, múltiplos idiomas, moderação de conteúdo.
 | Testes | **pytest** | já usado nos outros projetos |
 | Lint | **ruff** | rápido e já está no `requirements.txt` |
 | Esteira | **GitHub Actions** | o CI/CD que estou aprendendo |
-| Hospedagem | **Hugging Face Spaces**, CPU básico, grátis | só chamamos API, não rodamos modelo local |
+| Hospedagem | **Hugging Face Spaces**, **ZeroGPU** (grátis), sem usar GPU | só chamamos API, não rodamos modelo local. O CPU básico exige PRO para SDK Gradio (veja a decisão de 01/10/2026) |
 
 ### Os três provedores, com modelos verificados em 24/09/2026
 
 | Ordem | Provedor | Variável da chave | Modelo padrão | Custo |
 |---|---|---|---|---|
-| 1º | OpenRouter | `OPENROUTER_API_KEY` | `google/gemma-4-31b-it:free` | **zero** |
+| 1º | OpenRouter | `OPENROUTER_API_KEY` | `nvidia/nemotron-3-super-120b-a12b:free` *(era `google/gemma-4-31b-it:free`; veja 01/10/2026)* | **zero** |
 | 2º | Anthropic | `ANTHROPIC_API_KEY` | `claude-opus-5` | US$ 5 / 25 por milhão de tokens |
 | 3º | OpenAI | `OPENAI_API_KEY` | `gpt-6-sol` | US$ 2 / 10 por milhão de tokens |
 
@@ -102,8 +103,11 @@ Os três slugs foram conferidos no catálogo do OpenRouter em 24/09/2026 —
    **leitura** e não serve para isso.
 5. **As chaves ficam nos *Secrets* do Space**, não no repositório. Dentro do app elas
    aparecem como variáveis de ambiente comuns.
-6. **CPU básico, 2 vCPU e 16 GB**, sem GPU. Suficiente: o trabalho pesado acontece no
-   servidor do provedor de IA.
+6. **No plano grátis, Space com SDK Gradio roda em ZeroGPU**, não em CPU básico (o CPU
+   básico exige assinatura PRO, e o Hugging Face não deixa trocar depois de criado).
+   O ZeroGPU só sobe se o `app.py` tiver ao menos uma função com `@spaces.GPU`; o app
+   tem uma, que nunca é chamada. O trabalho pesado acontece no servidor do provedor
+   de IA, então nenhuma GPU é usada de fato.
 7. **O Space adormece** depois de um tempo sem visita e acorda na próxima, com alguns
    segundos de espera. Comportamento normal do plano grátis.
 
@@ -378,7 +382,7 @@ Dispara só em push na `main`, e só roda se o `ci.yml` terminou verde. Usa o se
 
 | # | Onde | O que fazer |
 |---|---|---|
-| 1 | Hugging Face | criar o Space **`FSzekut/professor-eng-dados`**, SDK Gradio, CPU básico, **público** |
+| 1 | Hugging Face | criar o Space **`FSzekut/professor-eng-dados`**, SDK Gradio, hardware **ZeroGPU** (o CPU básico fica bloqueado no plano grátis), **público** |
 | 2 | Hugging Face → *Access Tokens* | criar token **fine-grained com permissão de escrita neste Space**. Não reaproveitar o `RAGnaldo`, que é de leitura |
 | 3 | GitHub → *Settings* → *Secrets* → *Actions* | criar o secret `HF_TOKEN` com esse token — ✅ **feito em 24/09/2026, 20:52** |
 | 4 | Hugging Face → Space → *Settings* → *Variables and secrets* | criar os secrets das chaves que eu tiver: `OPENROUTER_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` |
@@ -396,20 +400,32 @@ funciona com qualquer uma sozinha.
 
 ## 8. Critérios de aceite
 
-- [ ] Abro `huggingface.co/spaces/FSzekut/professor-eng-dados` e converso com o
+Conferido em 01/10/2026. Os itens marcados foram testados no Space de verdade, pela API
+pública do Gradio, sem navegador; o que depende de olhar a tela fica anotado.
+
+- [x] Abro `huggingface.co/spaces/FSzekut/professor-eng-dados` e converso com o
       assistente; ele responde em português, como professor
-- [ ] A tela mostra o nome e a descrição do `config.yaml`, nas cores escolhidas
-- [ ] Os botões de pergunta de exemplo aparecem e funcionam
-- [ ] Com **só** a chave do OpenRouter cadastrada, o chat responde
+- [~] A tela mostra o nome e a descrição do `config.yaml`, nas cores escolhidas
+      *(o cabeçalho, o CSS das cores e o script do tema escuro estão na configuração
+      servida; falta só o olho humano confirmar a aparência no navegador)*
+- [x] Os botões de pergunta de exemplo aparecem e funcionam *(o clique foi testado)*
+- [x] Com **só** a chave do OpenRouter cadastrada, o chat responde
 - [ ] Tirando a chave do OpenRouter e deixando só outra, o chat continua respondendo
+      *(precisa de uma segunda chave; coberto pelos testes T8 e T9)*
 - [ ] Com o primeiro provedor falhando, a resposta vem do segundo sem eu perceber
-- [ ] Sem chave nenhuma, a tela abre e explica que falta cadastrar chave
-- [ ] Mudo uma cor pelo site do GitHub e, minutos depois, o Space mostra a mudança
-- [ ] Escrevo `cor_primaria: azul` de propósito: o CI fica vermelho, **nada é publicado**
-      e o Space continua funcionando com a versão anterior
-- [ ] Planto uma chave falsa num arquivo: o CI barra a publicação
-- [ ] `pytest` passa localmente sem nenhuma chave de API configurada
-- [ ] Nenhuma chave aparece em qualquer arquivo do repositório
+      *(precisa de uma segunda chave; coberto pelo teste T9. Ao vivo só se viu o
+      relatório de "todos falharam", com o 429 do OpenRouter)*
+- [x] Sem chave nenhuma, a tela abre e explica que falta cadastrar chave *(local)*
+- [x] Mudo uma cor pelo site do GitHub e, minutos depois, o Space mostra a mudança
+      *(provado trocando o modelo no `config.yaml`: push, CI, deploy e Space novo, o
+      mesmo caminho que a edição pelo site percorre)*
+- [x] Escrevo `cor_primaria: azul` de propósito: o CI fica vermelho, **nada é publicado**
+      e o Space continua funcionando com a versão anterior *(commit `ac0f0f1`: CI
+      vermelho no pytest, Deploy `skipped`, Space ficou em `b1dd5a2` e respondeu)*
+- [x] Planto uma chave falsa num arquivo: o CI barra a publicação *(PR de teste: o relatório
+      aponta arquivo e linha e mostra só o começo da chave)*
+- [x] `pytest` passa localmente sem nenhuma chave de API configurada
+- [x] Nenhuma chave aparece em qualquer arquivo do repositório *(varredura limpa)*
 
 ---
 
@@ -449,6 +465,9 @@ seção 7 precisa estar pronta antes da tarefa 7.
 | O build do Space demora demais ou estoura memória | dependência pesada entrando sem necessidade | na parte 1 nada de IA local entra no `requirements.txt`: só `gradio`, `pyyaml`, `anthropic`, `openai` |
 | A OpenAI recusa a chamada com *Unsupported parameter: max_tokens* | os modelos novos da OpenAI pedem `max_completion_tokens`; o OpenRouter espera `max_tokens` | já tratado: o cliente usa o parâmetro certo para cada um. Se aparecer, é sinal de que a API mudou de novo |
 | O CI passa no meu computador e falha no GitHub | versão diferente de Python, ou arquivo não commitado | o CI usa Python 3.12; conferir `git status` antes de concluir que "funciona aqui" |
+| Space em **"Runtime error"** com `No @spaces.GPU function detected during startup` | o Space está em ZeroGPU e o `app.py` não tem nenhuma função `@spaces.GPU` | manter o bloco do ZeroGPU no `app.py`. Trocar para CPU básico exige PRO |
+| O deploy falha com **`You are not authorized to push to this repo`** | o token tem escopo de escrita vazio para o Space, ou o Space foi apagado e recriado (o escopo aponta para o antigo) | no Hugging Face, editar o token e marcar escrita para o Space atual. O passo "Conferir o que o token pode fazer" do `deploy.yml` mostra os escopos no log |
+| O chat responde **"limite atingido ou modelo gratuito lotado (429)"** com o trecho `temporarily rate-limited` | o provedor de origem do modelo gratuito está saturado. Modelos do mesmo provedor (os dois Gemma, no Google) caem juntos | trocar o `modelo` do OpenRouter no `config.yaml` por um de **outro** provedor de origem; o catálogo `:free` está em `openrouter.ai/models?q=free` |
 
 ---
 
@@ -465,3 +484,8 @@ seção 7 precisa estar pronta antes da tarefa 7.
 | 24/09/2026 | Python 3.12, não 3.11 | é o que o Space já declarou no `README.md`; igualar evita o clássico "funciona aqui e falha lá" |
 | 24/09/2026 | `requirements.txt` só com o que roda, e `requirements-dev.txt` com pytest e ruff | o Space não precisa instalar ferramenta de teste; build mais leve e rápido |
 | 24/09/2026 | Limite de mensagens por sessão | link público com as minhas chaves; o gratuito em primeiro lugar e o limite cobrem o uso normal |
+| 01/10/2026 | Space em **ZeroGPU**, com uma função `@spaces.GPU` que nunca é chamada | o plano grátis só oferece ZeroGPU para SDK Gradio (CPU básico exige PRO, e não dá para trocar depois). O ZeroGPU recusa subir sem essa função. Apagar o bloco se um dia o Space for para CPU básico |
+| 01/10/2026 | `deploy.yml` com `event == 'push'` e passo que lista os escopos do token | o filtro de branch sozinho deixaria um PR de fork chamado `main` rodar com o secret; e o GitHub não mostra a permissão de um secret, então perguntamos ao Hugging Face |
+| 01/10/2026 | Modelo padrão do OpenRouter: `nvidia/nemotron-3-super-120b-a12b:free` | os dois Gemma gratuitos rodam no mesmo provedor de origem (Google), com o limite estourado (429). O Nemotron roda na infraestrutura da própria Nvidia e respondeu em português |
+| 01/10/2026 | A mensagem de falha traz um trecho (até 160 caracteres) da resposta do provedor | "429" sozinho não dizia se era o limite da conta ou a lotação do modelo; sem o trecho, o diagnóstico levou três tentativas. O texto passa pela limpeza de chaves |
+| 01/10/2026 | Varredura de segredos com o marcador `segredo-falso` por linha | os testes têm chaves de mentira de propósito; ignorar a pasta `tests/` deixaria passar uma chave verdadeira colada ali |

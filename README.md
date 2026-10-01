@@ -26,7 +26,7 @@ Projeto da pós **Engenharia de Dados e IA** (Anhanguera), construído em partes
 
 | Parte | O que entrega | Situação |
 |---|---|---|
-| 1 | Chat publicado + esteira automática de CI/CD | em construção |
+| 1 | Chat publicado + esteira automática de CI/CD | **no ar** (01/10/2026) |
 | 2 | Base de conhecimento com documentos próprios (RAG) | a fazer |
 | 3 | Site próprio, com domínio e visual feito do zero | a fazer |
 
