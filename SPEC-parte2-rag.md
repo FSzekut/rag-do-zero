@@ -338,6 +338,8 @@ revisado na **Tarefa 3**.
 | `buscar_producao(pergunta, vetor, n, peso_palavras, peso_sentido, sim_min)` | busca híbrida **só** na coleção `producao`; devolve fonte, seção, conteúdo e nota | a chave **publicável** (o app) e a secreta |
 | `buscar_teste(...)` | a mesma busca, na coleção `teste` | **só a chave secreta** (o job `avaliar`) |
 | `promover(versao)` | numa transação: apaga `producao` e move `teste` para `producao`, **se** a versão bater | **só a chave secreta** |
+| `contar_producao()` | conta os trechos da `producao`, para o app escrever no log "Base de conhecimento: N trechos" sem ler a tabela | a chave **publicável** e a secreta |
+| `busca_interna(colecao, ...)` | a busca de verdade, usada pelas duas de cima | **só a chave secreta** (ninguém de fora a chama) |
 
 A busca por palavras monta uma consulta com **OU** entre as palavras da pergunta
 (a consulta padrão do Postgres exige todas, e uma pergunta em linguagem natural quase
@@ -483,3 +485,5 @@ e a 4 em diante precisam do `.env` com as chaves.
 | 01/10/2026 | Acesso ao Supabase por `httpx` e a API REST, sem o SDK | já está instalado; menos dependências no Space |
 | 01/10/2026 | Coluna `versao` em cada trecho | impede que o `publicar` promova um índice que não é o do commit que ele publica |
 | 01/10/2026 | O job `avaliar` só roda em push na `main` | usa um secret, e PR de fora nunca deve ver secret |
+| 01/10/2026 | `contar_producao()` e `busca_interna()` acrescentadas ao esquema (Tarefa 3) | o app precisa do número de trechos para o log sem ler a tabela; a busca ficou numa função interna para `buscar_producao` e `buscar_teste` não repetirem o SQL |
+| 01/10/2026 | `scripts/verificar_banco.py` prova as permissões tentando o proibido com a chave publicável | "o banco impede" só vale se alguém tenta. Passou nas 12 verificações no projeto real |
