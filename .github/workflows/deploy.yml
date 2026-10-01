@@ -40,6 +40,35 @@ jobs:
           # Histórico completo: com histórico raso o Space rejeita o push.
           fetch-depth: 0
 
+      # O GitHub não mostra a permissão de um secret, então perguntamos ao
+      # Hugging Face o que este token pode fazer. Só imprime nome, papel e
+      # escopos: nunca o valor. Não barra nada; quem decide é o push logo abaixo.
+      - name: Conferir o que o token pode fazer
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          curl -sS -H "Authorization: Bearer ${HF_TOKEN}" \
+            https://huggingface.co/api/whoami-v2 -o whoami.json || true
+          python3 - <<'PY'
+          import json
+          try:
+              dados = json.load(open("whoami.json"))
+          except ValueError:
+              raise SystemExit("A resposta do Hugging Face não é JSON.")
+          if "auth" not in dados:
+              raise SystemExit(f"Token não reconhecido: {dados.get('error', dados)}")
+          token = dados["auth"].get("accessToken", {})
+          print("conta:", dados.get("name"))
+          print("token:", token.get("displayName"), "| papel:", token.get("role"))
+          fino = token.get("fineGrained") or {}
+          for item in fino.get("scoped", []):
+              entidade = item.get("entity", {})
+              print("  escopo:", entidade.get("type"), entidade.get("name"),
+                    item.get("permissions"))
+          print("  global:", fino.get("global"))
+          PY
+          rm -f whoami.json
+
       - name: Publicar no Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
