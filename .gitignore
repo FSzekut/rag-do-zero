@@ -7,3 +7,6 @@ __pycache__/
 
 # segredos — as chaves vivem nos Secrets do Space, nunca aqui
 .env
+
+# material do curso (PDF de apostila): repo publico, nao versionar
+material-curso/
