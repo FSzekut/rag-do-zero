@@ -91,10 +91,13 @@ palavras: é uma limitação conhecida).
 
 ### Pontos que eu ainda **não verifiquei** e que a implementação precisa confirmar
 
-1. **Limite de entrada do modelo de embedding.** Pelo que sei, o modelo foi treinado com
-   no máximo **128 tokens** por texto; trechos muito maiores são cortados na hora de
-   gerar o vetor. Se for verdade, o trecho ideal é pequeno. A **Tarefa 4 confere** no
-   tokenizador do `fastembed`, e a **Tarefa 5 ajusta o tamanho** pelo resultado.
+1. ~~**Limite de entrada do modelo de embedding.**~~ **Verificado na Tarefa 4
+   (01/10/2026):** o tokenizador do modelo corta em **128 tokens**, e o português deste
+   material dá cerca de **2 tokens por palavra**. Com `tamanho_trecho: 150`, a mediana é de
+   163 tokens e **66% dos trechos passam do limite** (a ponta deles fica fora do vetor;
+   continua valendo para a busca por palavras e para o modelo de linguagem). Com 60
+   palavras, só 17% passam. **A Tarefa 5 mede o hit rate com 60, 90 e 150 e decide o
+   padrão**, e avalia dividir tabelas grandes por linha.
 2. **Formato das chaves novas do Supabase** (`sb_publishable_...` e `sb_secret_...`): a
    chamada à API REST deve levar a chave no cabeçalho `apikey`. A **Tarefa 3 confere**.
 3. **`fastembed` dentro de um Space em ZeroGPU**: tempo de download do modelo (cerca de
@@ -385,7 +388,7 @@ perguntas:
 
 # Perguntas IMPOSSÍVEIS (a resposta não existe nos documentos). Ficam comentadas:
 # ao descomentar, o portão deve barrar. É o teste de que ele funciona.
-# - pergunta: Qual é a capital da Austrália?
+# - pergunta: Quem ganhou a Copa do Mundo de 2002?
 #   fonte_esperada: parte2-rag.md
 #   secao_esperada: Segredos
 ```
@@ -414,8 +417,10 @@ perguntas:
       apostilas, a fonte, a seção e os vetores
 - [ ] Pergunto algo que está nas apostilas e a resposta termina com **"Fontes
       consultadas"**, escrita pelo app
-- [ ] Pergunto algo que **não** está no material ("qual a capital da Austrália?") e a
-      resposta é exatamente **"Não encontrei isso no material do curso."**
+- [ ] Pergunto algo que **não** está no material ("quem ganhou a Copa do Mundo de 2002?")
+      e a resposta é exatamente **"Não encontrei isso no material do curso."**
+      (*Não use "qual a capital da Austrália?": essa frase está escrita na própria apostila,
+      §18-E, e a busca a acha.*)
 - [ ] Pergunto com **outras palavras** e ele ainda acha o trecho certo
 - [ ] Descomento uma pergunta de teste impossível: o job `avaliar` fica **vermelho**, o
       log mostra quais falharam, o `publicar` **nem começa**, `producao` continua igual e o
@@ -487,3 +492,6 @@ e a 4 em diante precisam do `.env` com as chaves.
 | 01/10/2026 | O job `avaliar` só roda em push na `main` | usa um secret, e PR de fora nunca deve ver secret |
 | 01/10/2026 | `contar_producao()` e `busca_interna()` acrescentadas ao esquema (Tarefa 3) | o app precisa do número de trechos para o log sem ler a tabela; a busca ficou numa função interna para `buscar_producao` e `buscar_teste` não repetirem o SQL |
 | 01/10/2026 | `scripts/verificar_banco.py` prova as permissões tentando o proibido com a chave publicável | "o banco impede" só vale se alguém tenta. Passou nas 12 verificações no projeto real |
+| 01/10/2026 | Medido: o modelo de embedding corta em 128 tokens; 66% dos trechos de 150 palavras passam disso | o padrão `tamanho_trecho: 150` provavelmente cai na Tarefa 5. Primeira busca real: paráfrase ("credencial do modelo") não achou a seção certa |
+| 01/10/2026 | `fastembed` entra no `requirements-dev.txt` na Tarefa 4 e só vai para o `requirements.txt` na Tarefa 8 | o `requirements.txt` é o que o Space instala: não arriscar o Space no ar antes de o app usar a base |
+| 01/10/2026 | A pergunta de exemplo "qual a capital da Austrália?" sai dos critérios de aceite | a frase está escrita na própria apostila (§18-E), então a busca a acha |

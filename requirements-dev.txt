@@ -2,3 +2,6 @@
 -r requirements.txt
 pytest>=9.0,<10
 ruff>=0.16,<0.17      # versão presa: mudança de versão muda as regras padrão
+# Base de consulta (parte 2): usado pelos scripts de indexação e avaliação. Só vai para o
+# requirements.txt (o que o Space instala) quando o app passar a usá-lo, na Tarefa 8.
+fastembed>=0.8,<1
